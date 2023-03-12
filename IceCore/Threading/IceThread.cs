@@ -22,7 +22,14 @@ namespace IceEngine.Threading
             if (!disposedValue)
             {
                 cancelSource.Cancel();
-                if (thread != null) thread.Join();
+                if (thread != null)
+                {
+                    if (thread.ThreadState == ThreadState.WaitSleepJoin)
+                    {
+                        thread.Interrupt();
+                    }
+                    thread.Join();
+                }
                 cancelSource.Dispose();
                 thread = null;
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,29 +9,41 @@ using System.Windows.Controls;
 using IceEngine.Internal;
 using IceHomeServerWPF;
 
+using static Ice.Island;
+
 namespace IceEngine
 {
-    internal class Debug
+    internal class Debug : System.ComponentModel.INotifyPropertyChanged
     {
-        static SettingGlobal Setting => SettingGlobal.Setting;
-        static TextBlock DebugLabel => MainWindow.Instance?.DebugLabel;
+        #region Static Interface
+        public static void SaveLog() => Instance._SaveLog();
+        public static void Log(object message, object context = null) => Instance._Log(message, context);
+        public static void LogWarning(object message, object context = null) => Instance._LogWarning(message, context);
+        public static void LogError(object message, object context = null) => Instance._LogError(message, context);
+        #endregion
+        public static Debug Instance => _instance ??= new Debug(); static Debug _instance;
 
-        static DateTimeOffset? tStart = null;
-        static DateTimeOffset? tLast = null;
-        public static int lineCount = 0;
-
-        static readonly Queue<string> msgQueue = new Queue<string>();
-        static void DoLog(string message)
+        public event PropertyChangedEventHandler PropertyChanged;
+        public string DebugStr
         {
-            if (DebugLabel is null)
+            get => _debugStr; set
             {
-                msgQueue.Enqueue(message);
-                return;
+                _debugStr = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("DebugStr"));
             }
+        }
+        string _debugStr;
 
-            static void Line(string message)
+
+        DateTimeOffset? tStart = null;
+        DateTimeOffset? tLast = null;
+        int lineCount = 0;
+
+        void DoLog(string message)
+        {
+            void Line(string message)
             {
-                DebugLabel.Text += $"{message}\n";
+                DebugStr += $"{message}\n";
                 lineCount++;
             }
 
@@ -41,7 +54,6 @@ namespace IceEngine
                 Line(now.ToString("【---- yyyy/MM/dd HH:mm:ss ----】"));
             }
 
-            while (msgQueue.Count > 0) Line(msgQueue.Dequeue());
             Line(message);
 
             if (tStart is null) tStart = now;
@@ -49,11 +61,11 @@ namespace IceEngine
             {
                 if (lineCount > Setting.logMaxLineCount || (now - tStart.Value).TotalHours > Setting.logMaxHours)
                 {
-                    SaveLog();
+                    _SaveLog();
                 }
             }
         }
-        public static void SaveLog()
+        void _SaveLog()
         {
             if (tStart is null || lineCount == 0) return;
 
@@ -61,22 +73,22 @@ namespace IceEngine
             string title = tStart.Value.ToString("yyyyMMdd-HHmmss") + " to " + now.ToString("yyyyMMdd-HHmmss");
             string path = $"{Ice.Save.DataPath}\\Log\\{title}.log";
             path.TryCreateFolderOfPath();
-            File.WriteAllText(path, (string)DebugLabel.Text, Encoding.UTF8);
+            File.WriteAllText(path, DebugStr, Encoding.UTF8);
 
-            DebugLabel.Text = "";
+            DebugStr = "";
             tStart = now;
             lineCount = 0;
         }
-        public static void Log(object message, object context = null)
+        void _Log(object message, object context = null)
         {
             DoLog(message.ToString());
         }
-        public static void LogWarning(object message, object context = null)
+        void _LogWarning(object message, object context = null)
         {
             message = "[Warning] " + message;
             DoLog(message.ToString());
         }
-        public static void LogError(object message, object context = null)
+        void _LogError(object message, object context = null)
         {
             message = "【ERROR】 " + message;
             DoLog(message.ToString());

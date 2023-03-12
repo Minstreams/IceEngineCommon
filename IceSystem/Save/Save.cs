@@ -38,7 +38,7 @@ namespace Ice
                 if (!absolutePath) path = ToAbsolutePath(path);
                 if (!File.Exists(path)) return null;
                 var json = File.ReadAllText(path, Format);
-                return JsonSerializer.Deserialize<T>(json);
+                return JsonSerializer.Deserialize<T>(json, optionsNormal);
             }
 
             // Save

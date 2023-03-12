@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -108,10 +109,10 @@ namespace IceEngine.Networking.Framework
                 return;
             }
 
+            udpClient.Dispose();
+            udpClient = null;
             udpReceiveThread?.Dispose();
             udpReceiveThread = null;
-            udpClient.Close();
-            udpClient = null;
             Log("UDP closed");
         }
 
@@ -152,7 +153,9 @@ namespace IceEngine.Networking.Framework
                 catch (SocketException ex)
                 {
                     if (ex.SocketErrorCode == SocketError.ConnectionReset) Log("Target ip doesn't has a udp receiver!");
-                    else Log(ex);
+                    else if (ex.SocketErrorCode == SocketError.Interrupted) return;
+
+                    Log(ex);
                     continue;
                 }
                 catch (OperationCanceledException)
@@ -188,7 +191,7 @@ namespace IceEngine.Networking.Framework
             public IPEndPoint RemoteEndPoint => _remoteEndPoint ??= client.Client.RemoteEndPoint as IPEndPoint; IPEndPoint _remoteEndPoint = null;
             public IPEndPoint UDPEndPoint => _udpEndPoint ??= new IPEndPoint(RemoteEndPoint.Address, ServerInstance.ClientUDPPort); IPEndPoint _udpEndPoint = null;
 
-            public void Destroy()
+            public void Destroy(bool fromThread = false)
             {
                 if (isDestroyed)
                 {
@@ -197,11 +200,11 @@ namespace IceEngine.Networking.Framework
                 }
                 isDestroyed = true;
 
-                receiveThread?.Dispose();
                 ServerInstance.CallServerDisconnection(this);
                 ServerInstance.connections.Remove(this);
                 stream?.Close();
                 client?.Close();
+                if (!fromThread) receiveThread?.Dispose();
                 Log("Server.connection Destroyed.");
             }
             public void SendRaw(byte[] data)
@@ -305,12 +308,21 @@ namespace IceEngine.Networking.Framework
                 catch (SocketException ex)
                 {
                     ServerInstance.Log(ex);
-                    Destroy();
+                    Destroy(true);
+                }
+                catch (IOException ex)
+                {
+                    if (ex.InnerException is SocketException se && se.SocketErrorCode == SocketError.ConnectionAborted) return;
+
+                    ServerInstance.Log(ex);
+                    Destroy(true);
                 }
                 catch (Exception ex)
                 {
                     ServerInstance.Log(ex);
-                    Destroy();
+
+                    Destroy(true);
+                    return;
                 }
             }
             void Log(string message) => ServerInstance.Log(message + $"(id:{NetId})");
@@ -339,11 +351,11 @@ namespace IceEngine.Networking.Framework
                 Log("TCP already closed!");
                 return;
             }
-            listenThread?.Dispose();
-            listenThread = null;
             DisconnectAll();
             listener?.Stop();
             listener = null;
+            listenThread?.Dispose();
+            listenThread = null;
             Log("TCP closed");
         }
 
@@ -379,6 +391,12 @@ namespace IceEngine.Networking.Framework
                     cancel.Token.ThrowIfCancellationRequested();
                     connections.Add(new Connection(client, NewTcpId(client.Client.RemoteEndPoint as IPEndPoint)));
                 }
+            }
+            catch (SocketException ex)
+            {
+                if (ex.SocketErrorCode == SocketError.Interrupted) return;
+
+                Log(ex);
             }
             catch (OperationCanceledException)
             {

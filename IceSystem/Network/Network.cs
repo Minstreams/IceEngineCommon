@@ -195,11 +195,15 @@ namespace Ice
         {
             while (true)
             {
-                Thread.Sleep(100);
                 try
                 {
+                    Thread.Sleep(100);
                     cancel.Token.ThrowIfCancellationRequested();
                     while (mainThreadActionQueue.Count > 0) mainThreadActionQueue.Dequeue()?.Invoke();
+                }
+                catch (ThreadInterruptedException)
+                {
+                    return;
                 }
                 catch (OperationCanceledException)
                 {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -116,10 +117,10 @@ namespace IceEngine.Networking.Framework
                 Log("UDP already closed!");
                 return;
             }
+            udpClient?.Dispose();
+            udpClient = null;
             udpReceiveThread?.Dispose();
             udpReceiveThread = null;
-            udpClient?.Close();
-            udpClient = null;
             Log("UDP closed");
         }
         public void UDPSend(Pkt pkt, IPEndPoint remote)
@@ -156,6 +157,8 @@ namespace IceEngine.Networking.Framework
                 }
                 catch (SocketException ex)
                 {
+                    if (ex.SocketErrorCode == SocketError.Interrupted) return;
+
                     Log(ex);
                     continue;
                 }
@@ -232,12 +235,12 @@ namespace IceEngine.Networking.Framework
                 Log("Connection already closed!");
                 return;
             }
+            stream?.Dispose();
+            client?.Dispose();
             connectThread?.Dispose();
             connectThread = null;
             receiveThread?.Dispose();
             receiveThread = null;
-            stream?.Close();
-            client?.Close();
             client = null;
             Log("Connection closed");
         }
@@ -278,6 +281,8 @@ namespace IceEngine.Networking.Framework
                 }
                 catch (SocketException ex)
                 {
+                    if (ex.SocketErrorCode == SocketError.NotSocket) return;
+
                     Log(ex);
                     Log("Connection failed! Reconnecting……:" + Port);
                     if (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
@@ -292,7 +297,15 @@ namespace IceEngine.Networking.Framework
                         client = null;
                         return;
                     }
-                    Thread.Sleep(1000);
+
+                    try
+                    {
+                        Thread.Sleep(1000);
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                        return;
+                    }
                     continue;
                 }
                 catch (OperationCanceledException)
@@ -367,6 +380,16 @@ namespace IceEngine.Networking.Framework
             catch (OperationCanceledException)
             {
                 Log("Receive Thread Aborted.");
+            }
+            catch (IOException ex)
+            {
+                if (ex.InnerException is SocketException se && se.SocketErrorCode == SocketError.ConnectionAborted) return;
+
+                Log(ex);
+                stream?.Close();
+                client?.Close();
+                client = null;
+                CallDisconnection();
             }
             catch (Exception ex)
             {
