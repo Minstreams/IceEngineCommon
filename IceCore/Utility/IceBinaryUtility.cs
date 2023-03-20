@@ -268,7 +268,7 @@ namespace IceEngine
             void OnSingleLog(string log)
             {
                 string prefix = "";
-                System.Diagnostics.StackTrace st = new();
+                var st = new System.Diagnostics.StackTrace();
                 int fc = st.FrameCount;
                 if (baseStack is null)
                 {
@@ -410,7 +410,7 @@ namespace IceEngine
             //public static readonly Type listType = typeof(IList);
         }
 
-        static readonly Dictionary<byte, Type> headerToTypeMap = new()
+        static readonly Dictionary<byte, Type> headerToTypeMap = new Dictionary<byte, Type>()
         {
             { 0x00, null },
             { 0x01, TypeDefinitions.byteType },
@@ -647,8 +647,8 @@ namespace IceEngine
                     }
                     int mark = buffer.Count;
 
-                    List<FieldInfo> fieldList = new();
-                    List<FieldInfo> changableFieldList = new();    // 容易改变的 field 信息
+                    List<FieldInfo> fieldList = new List<FieldInfo>();
+                    List<FieldInfo> changableFieldList = new List<FieldInfo>();    // 容易改变的 field 信息
                     for (var t = type; t != TypeDefinitions.objectType; t = t.BaseType) fieldList.AddRange(t.GetFields(BindingFlags.Instance | BindingFlags.NonPublic));
                     foreach (var f in type.GetFields(BindingFlags.Instance | BindingFlags.Public))
                     {
@@ -709,7 +709,7 @@ namespace IceEngine
 
         public static byte[] ToBytes(object obj, bool withHeader = true, Type baseType = null, bool withExtraInfo = false)
         {
-            List<byte> buffer = new();
+            List<byte> buffer = new List<byte>();
 
             // 处理值
             buffer.AddFieldBlock(obj, withHeader, baseType: baseType, withExtraInfo: withExtraInfo);
@@ -921,16 +921,16 @@ namespace IceEngine
                 return bytes.ReadValueOfType(ref offset, tFallback, ins, withExtraInfo);
             }
 
-            return header switch
+            switch (header)
             {
-                FieldBlockHeaderDefinitions.typeField => bytes.ReadType(ref offset),
-                FieldBlockHeaderDefinitions.typeHashField => IceCoreUtility.HashCodeToPacketType(bytes.ReadUShort(ref offset)),
-                FieldBlockHeaderDefinitions.classField => bytes.ReadValueOfType(ref offset, bytes.ReadType(ref offset), instance, withExtraInfo),
-                FieldBlockHeaderDefinitions.arrayField or
-                FieldBlockHeaderDefinitions.collectionField or
-                FieldBlockHeaderDefinitions.baseClassField => bytes.ReadValueOfType(ref offset, baseType, instance, withExtraInfo),
-                _ => throw new Exception($"Not supported header! {header:X2}"),
-            };
+                case FieldBlockHeaderDefinitions.typeField: return bytes.ReadType(ref offset);
+                case FieldBlockHeaderDefinitions.typeHashField: return IceCoreUtility.HashCodeToPacketType(bytes.ReadUShort(ref offset));
+                case FieldBlockHeaderDefinitions.classField: return bytes.ReadValueOfType(ref offset, bytes.ReadType(ref offset), instance, withExtraInfo);
+                case FieldBlockHeaderDefinitions.arrayField:
+                case FieldBlockHeaderDefinitions.collectionField:
+                case FieldBlockHeaderDefinitions.baseClassField: return bytes.ReadValueOfType(ref offset, baseType, instance, withExtraInfo);
+                default: throw new Exception($"Not supported header! {header:X2}");
+            }
         }
         static void ReadObjectOverride(this byte[] bytes, ref int offset, object obj, Type type = null, bool withExtraInfo = false)
         {
@@ -944,8 +944,8 @@ namespace IceEngine
             }
             int mark = offset;
 
-            List<FieldInfo> fieldList = new();
-            List<FieldInfo> changableFieldList = new();    // 容易改变的 field 信息
+            List<FieldInfo> fieldList = new List<FieldInfo>();
+            List<FieldInfo> changableFieldList = new List<FieldInfo>();    // 容易改变的 field 信息
             for (var t = type; t != TypeDefinitions.objectType; t = t.BaseType) fieldList.AddRange(t.GetFields(BindingFlags.Instance | BindingFlags.NonPublic));
             foreach (var f in type.GetFields(BindingFlags.Instance | BindingFlags.Public))
             {
@@ -965,11 +965,14 @@ namespace IceEngine
                 bool bHeader = fType.HasHeader();
                 if (bHeader)
                 {
-                    object instance = bytes[offset] switch
+                    object instance = null;
+                    switch (bytes[offset])
                     {
-                        FieldBlockHeaderDefinitions.classField or FieldBlockHeaderDefinitions.baseClassField => instance = f.GetValue(obj),
-                        _ => null,
-                    };
+                        case FieldBlockHeaderDefinitions.classField:
+                        case FieldBlockHeaderDefinitions.baseClassField:
+                            instance = f.GetValue(obj);
+                            break;
+                    }
 
                     f.SetValue(obj, bytes.ReadValueWithHeader(ref offset, fType, instance, withExtraInfo));
                 }
@@ -1048,7 +1051,7 @@ namespace IceEngine
             Log("\n长度: ");
             Log($"{newBytes.Length}".Color("#0AB"));
 
-            List<byte> buffer = new();
+            List<byte> buffer = new List<byte>();
 
             int po = 0;
             int pn = 0;
@@ -1238,7 +1241,7 @@ namespace IceEngine
         }
         public static byte[] ApplyDiff(byte[] bytes, byte[] diff)
         {
-            List<byte> buffer = new();
+            List<byte> buffer = new List<byte>();
 
             int p = 0;
             int offset = 0;
@@ -1266,7 +1269,7 @@ namespace IceEngine
         }
         public static byte[] ReverseDiff(byte[] bytes, byte[] diff)
         {
-            List<byte> buffer = new();
+            List<byte> buffer = new List<byte>();
 
             int p = 0;
             int offset = 0;

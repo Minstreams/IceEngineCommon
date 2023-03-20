@@ -16,19 +16,19 @@ namespace IceEngine.Networking
         /// <summary>
         /// for client to receive udp packets
         /// </summary>
-        static readonly Dictionary<Type, Action<Pkt, IPEndPoint>> udpDistributors = new();
+        static readonly Dictionary<Type, Action<Pkt, IPEndPoint>> udpDistributors = new Dictionary<Type, Action<Pkt, IPEndPoint>>();
         /// <summary>
         /// for client to receive udp packets for given id
         /// </summary>
-        static readonly Dictionary<int, Action<PktId, IPEndPoint>> udpIdDistributors = new();
+        static readonly Dictionary<int, Action<PktId, IPEndPoint>> udpIdDistributors = new Dictionary<int, Action<PktId, IPEndPoint>>();
         /// <summary>
         /// for client to receive tcp packets
         /// </summary>
-        static readonly Dictionary<Type, Action<Pkt>> tcpDistributors = new();
+        static readonly Dictionary<Type, Action<Pkt>> tcpDistributors = new Dictionary<Type, Action<Pkt>>();
         /// <summary>
         /// for client to receive tcp packets for given id
         /// </summary>
-        static readonly Dictionary<int, Action<PktId>> tcpIdDistributors = new();
+        static readonly Dictionary<int, Action<PktId>> tcpIdDistributors = new Dictionary<int, Action<PktId>>();
 
         public static event Action OnConnection;
         public static event Action OnDisconnection;
@@ -133,19 +133,19 @@ namespace IceEngine.Networking
         /// <summary>
         /// for server to process udp packets
         /// </summary>
-        static readonly Dictionary<Type, Action<Pkt, IPEndPoint>> udpProcessors = new();
+        static readonly Dictionary<Type, Action<Pkt, IPEndPoint>> udpProcessors = new Dictionary<Type, Action<Pkt, IPEndPoint>>();
         /// <summary>
         /// for server to process udp packets from client with given id
         /// </summary>
-        static readonly Dictionary<int, Action<PktId, IPEndPoint>> udpIdProcessors = new();
+        static readonly Dictionary<int, Action<PktId, IPEndPoint>> udpIdProcessors = new Dictionary<int, Action<PktId, IPEndPoint>>();
         /// <summary>
         /// for server to process tcp packets
         /// </summary>
-        static readonly Dictionary<Type, Action<Pkt, ServerBase.Connection>> tcpProcessors = new();
+        static readonly Dictionary<Type, Action<Pkt, ServerBase.Connection>> tcpProcessors = new Dictionary<Type, Action<Pkt, ServerBase.Connection>>();
         /// <summary>
         /// for server to process tcp packets from client with given id
         /// </summary>
-        static readonly Dictionary<int, Action<PktId, ServerBase.Connection>> tcpIdProcessors = new();
+        static readonly Dictionary<int, Action<PktId, ServerBase.Connection>> tcpIdProcessors = new Dictionary<int, Action<PktId, ServerBase.Connection>>();
 
         public static event Action<ServerBase.Connection> OnServerConnection;
         public static event Action<ServerBase.Connection> OnServerDisconnection;

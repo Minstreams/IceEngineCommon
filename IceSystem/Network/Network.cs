@@ -13,7 +13,7 @@ namespace Ice
     {
         #region Common
         public static IPAddress LocalIPAddress => LocalIPAddressList.Count > 0 ? LocalIPAddressList[0] : IPAddress.Loopback;
-        public readonly static List<IPAddress> LocalIPAddressList = new();
+        public readonly static List<IPAddress> LocalIPAddressList = new List<IPAddress>();
         public static void DetectLocalIPAddress()
         {
             try
@@ -188,8 +188,8 @@ namespace Ice
         }
 
         #region PRIVATE
-        readonly static Queue<Action> mainThreadActionQueue = new();
-        readonly static object threadLocker = new();
+        readonly static Queue<Action> mainThreadActionQueue = new Queue<Action>();
+        readonly static object threadLocker = new object();
         static IceThread mainThread;
         static void MainThread(CancellationTokenSource cancel)
         {

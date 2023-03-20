@@ -87,7 +87,7 @@ namespace IceEngine.Networking.Framework
         #region UDP
 
         #region Interface
-        public bool IsUdpOn => udpClient is not null;
+        public bool IsUdpOn => udpClient != null;
         public void OpenUDP()
         {
             if (IsUdpOn)
@@ -147,7 +147,7 @@ namespace IceEngine.Networking.Framework
             {
                 try
                 {
-                    IPEndPoint remoteIP = new(IPAddress.Any, ClientUDPPort);
+                    IPEndPoint remoteIP = new IPEndPoint(IPAddress.Any, ClientUDPPort);
                     byte[] buffer = udpClient.Receive(ref remoteIP);
                     // Block --------------------------------
                     cancel.Token.ThrowIfCancellationRequested();

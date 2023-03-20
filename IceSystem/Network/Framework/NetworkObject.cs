@@ -6,6 +6,6 @@
     public abstract class NetworkObject : NetworkBehaviour
     {
         public override NetIDMark ID => _id;
-        readonly NetIDMark _id = new();
+        readonly NetIDMark _id = new NetIDMark();
     }
 }

@@ -85,7 +85,7 @@ namespace IceEngine.Networking.Framework
         #region UDP
 
         #region Interface
-        public bool IsUdpOn => udpClient is not null;
+        public bool IsUdpOn => udpClient != null;
         public void OpenUDP()
         {
             if (IsUdpOn)
@@ -141,7 +141,7 @@ namespace IceEngine.Networking.Framework
             {
                 try
                 {
-                    IPEndPoint remoteIP = new(IPAddress.Any, ClientUDPPort);
+                    IPEndPoint remoteIP = new IPEndPoint(IPAddress.Any, ClientUDPPort);
                     byte[] buffer = udpClient.Receive(ref remoteIP);
                     // Block --------------------------------
                     cancel.Token.ThrowIfCancellationRequested();
@@ -331,7 +331,7 @@ namespace IceEngine.Networking.Framework
         #endregion
 
         #region Interface
-        public bool IsTcpOn => listener is not null;
+        public bool IsTcpOn => listener != null;
         public void OpenTCP()
         {
             if (IsTcpOn)
@@ -373,7 +373,7 @@ namespace IceEngine.Networking.Framework
         #endregion
 
         #region PRIVATE
-        readonly List<Connection> connections = new();
+        readonly List<Connection> connections = new List<Connection>();
         TcpListener listener;
         IceThread listenThread;
         int connectionCounter = 0;

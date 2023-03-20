@@ -5,9 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 using IceEngine.Internal;
-using IceHomeServerWPF;
 
 using static Ice.Island;
 
@@ -43,6 +41,7 @@ namespace IceEngine
         {
             void Line(string message)
             {
+                Console.WriteLine(message);
                 DebugStr += $"{message}\n";
                 lineCount++;
             }

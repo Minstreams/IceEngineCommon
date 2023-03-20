@@ -49,7 +49,7 @@ namespace Ice
         static List<Type> _subsystemList;
 
 
-        static Dictionary<string, Action> _subsystemActionCache = new();
+        static Dictionary<string, Action> _subsystemActionCache = new Dictionary<string, Action>();
         /// <summary>
         /// 调用所有子系统上存在的同名静态方法
         /// </summary>
@@ -57,7 +57,7 @@ namespace Ice
         {
             if (!_subsystemActionCache.TryGetValue(methodName, out Action action))
             {
-                List<Expression> callList = new();
+                var callList = new List<Expression>();
                 foreach (var s in SubSystemList)
                 {
                     MethodInfo m = s.GetMethod(methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);

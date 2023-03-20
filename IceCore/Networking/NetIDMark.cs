@@ -51,19 +51,19 @@ namespace IceEngine.Networking
         /// <summary>
         /// for client to receive udp packets
         /// </summary>
-        readonly Dictionary<Type, Action<PktId, IPEndPoint>> udpDistributors = new();
+        readonly Dictionary<Type, Action<PktId, IPEndPoint>> udpDistributors = new Dictionary<Type, Action<PktId, IPEndPoint>>();
         /// <summary>
         /// for server to process udp packets
         /// </summary>
-        readonly Dictionary<Type, Action<PktId, IPEndPoint>> udpProcessors = new();
+        readonly Dictionary<Type, Action<PktId, IPEndPoint>> udpProcessors = new Dictionary<Type, Action<PktId, IPEndPoint>>();
         /// <summary>
         /// for client to receive tcp packets
         /// </summary>
-        readonly Dictionary<Type, Action<PktId>> tcpDistributors = new();
+        readonly Dictionary<Type, Action<PktId>> tcpDistributors = new Dictionary<Type, Action<PktId>>();
         /// <summary>
         /// for server to process tcp packets
         /// </summary>
-        readonly Dictionary<Type, Action<PktId, ServerBase.Connection>> tcpProcessors = new();
+        readonly Dictionary<Type, Action<PktId, ServerBase.Connection>> tcpProcessors = new Dictionary<Type, Action<PktId, ServerBase.Connection>>();
 
         void UDPReceive(PktId pktId, IPEndPoint remote)
         {

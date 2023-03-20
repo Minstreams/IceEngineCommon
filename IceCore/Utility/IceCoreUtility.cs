@@ -202,8 +202,8 @@ namespace IceEngine
         public static readonly Type icePacketAttributeType = typeof(IcePacketAttribute);
         public static readonly Type iPacketSerializationHashcode = typeof(IPacketSerializationHashcode);
 
-        static readonly Dictionary<string, Type> _typeCacheMap = new();
-        static readonly HashSet<Type> serializableCollection = new()
+        static readonly Dictionary<string, Type> _typeCacheMap = new Dictionary<string, Type>();
+        static readonly HashSet<Type> serializableCollection = new HashSet<Type>()
         {
             GetType("UnityEngine.Vector2"),
             GetType("UnityEngine.Vector3"),
@@ -214,7 +214,7 @@ namespace IceEngine
             GetType("UnityEngine.Matrix4x4"),
         };
 
-        static readonly List<(ushort hash, Type type)> baseTypeCollection = new()
+        static readonly List<(ushort hash, Type type)> baseTypeCollection = new List<(ushort hash, Type type)>()
         {
             (0, typeof(byte)),
             (1, typeof(sbyte)),
@@ -238,9 +238,9 @@ namespace IceEngine
 
         static (Dictionary<ushort, Type> h2p, Dictionary<Type, ushort> p2h, HashSet<Type> nullableSet) CollectAllTypes()
         {
-            _hash2PktMap = new();
-            _pkt2HashMap = new();
-            _pktNotNullSet = new();
+            _hash2PktMap = new Dictionary<ushort, Type>();
+            _pkt2HashMap = new Dictionary<Type, ushort>();
+            _pktNotNullSet = new HashSet<Type>();
             foreach ((ushort hash, Type t) in baseTypeCollection)
             {
                 if (t is null)
